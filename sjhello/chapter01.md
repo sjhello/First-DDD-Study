@@ -22,7 +22,7 @@
   ![](../sjhello/image/chapter01/chapter01-architecture.png)
  - 흐름은 보통 위(Presentation) 에서 부터 아래(Infrastructure)로 흐르는 것을 기본으로 한다.
  - Presentation(표현)
-   - 사용자의 요청을 받고(Request), 응답(Response) 하는 역할
+   - 사용자의 요청을 받고(Request), 검증(Validation), 응답(Response) 하는 역할
  - Application(응용)
    - 도메인을 조합하여 기능을 실행하는 부분
  - Domain
