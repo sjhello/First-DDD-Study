@@ -29,3 +29,153 @@
    - 도메인 전문가와 협업하여 이끌어낸 요구사항이 담기는 부분
  - Infrastructure
    - 외부 시스템과의 연동을 담당하는 부분
+
+# 엔티티와 벨류
+
+## 엔티티(Entity)
+각각의 엔티티는 **고유한 식별자**를 가지는데 식별자에 따라서 같은 객체인지 다른 객체인지 구분하고 equals()와 hasCode()를 이용하여 구현 할 수 있다.
+```java
+public class Member {
+
+	private Long id;
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		Member member = (Member)o;
+		return Objects.equals(id, member.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+}
+```
+
+## 식별자를 생성하는 방법
+ - 특정 규칙에 따라 생성
+   - 같은 식별자가 만들어지는 것을 주의 
+   - 202212131944: 날짜 + 시간의 조합
+ - UUID, Nano ID 생성
+   - java.util.UUID
+ - 값을 직접 입력
+   - 회원의 id
+   - 이메일 주소
+ - 일련번호
+   - DB의 Sequence Number
+
+## 밸류 타입(Value Object)
+ - 엔티티와는 다르게 식별자가 없는 도메인
+ - 어떠한 개념에 대해서 그 개념을 하나로 표현할 수 있을때 밸류 타입을 사용 할 수 있다
+```java
+public class Member {
+	private Long id;
+	
+    // private String address1;
+    // private String address2;
+    // private String zipCode;
+   
+    private Address address;
+	
+   ...
+}
+
+public class Address {
+	private String address1;
+	private String address2;
+	private String zipCode;
+}
+```
+ - 장점
+   - 밸류 타입을 위한 기능을 추가 할 수 있다
+   - 어떠한 데이터를 의미있는 객체로 표현하여 기본 자료형으로 표현된 코드보다 코드를 이해하는 것이 쉽다 
+```java
+public class OrderLine {
+	private Product product;
+	private Money price;
+	private int quantity;
+	private Money amount;   // 주문한 단일 상품에 대한 총가격
+}
+
+public class Money {
+	private int price;
+
+   public Money add(Money money) {
+      return new Money(this.value + money.value);
+   }
+
+   public Money multiply(int multiplier) {
+      return new Money(this.value * multiplier);
+   }
+
+   /* 생성자, Getter */
+}
+```
+
+## 도메인, 밸류 타입에 외부에 공개되는 set 메서드 지양하기 - 불변객체
+ - 객체가 불변하면? 서로 다른 참조를 갖기 때문에 변경에 대해 안전하다 
+   - 같은 참조에 의한 예상하지 못한 변경을 피할 수 있다
+   - Thread Safe
+```java
+public class SetTest {
+
+	@Test
+	void changeTest() {
+		// given
+		Money money = new Money(12);
+		OrderLine orderLine = new OrderLine(money);
+
+		// when
+		money.setPrice(13);
+
+		// then
+		assertThat(orderLine.getOrderPrice().getPrice()).isEqualTo(12);
+	}
+
+}
+
+class OrderLine {
+	private Money orderPrice;
+
+	public OrderLine(Money orderPrice) {
+		this.orderPrice = orderPrice;
+		
+		/* 가변객체라면 새로운 참조를 생성해줘야 한다 */
+		// this.orderPrice = new Money(orderPrice.getPrice());
+	}
+
+	public Money getOrderPrice() {
+		return orderPrice;
+	}
+}
+
+class Money {
+	private int price;
+
+	public Money(int price) {
+		this.price = price;
+	}
+
+	public int getPrice() {
+		return price;
+	}
+
+	public void setPrice(int price) {
+		this.price = price;
+	}
+}
+```
+
+# 도메인 용어와 유비쿼터스 언어
+ - 도메인에서 사용하는 용어를 코드에 반영함으로써 소통의 모호함과 용어를 해석하는 과정을 줄일 수 있다.
+```java
+public enum OrderState {
+	/* STEP1, STEP2, STEP3, STEP4, STEP5 */
+    PAYMENT_WAITING, PREPARING, SHIPPED, DELIVERING, DELIVERY_COMPLETED
+}
+```
+ - 
