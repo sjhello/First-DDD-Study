@@ -1,5 +1,10 @@
 package chapter1;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Money {
     private int value;
     public Money(int value) {
