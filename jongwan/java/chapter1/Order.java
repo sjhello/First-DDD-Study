@@ -1,10 +1,15 @@
 package chapter1;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
 import java.util.List;
 import java.util.Objects;
 
+@Builder
+@AllArgsConstructor
 public class Order {
-    String orderNumber;
+    private OrderNo id;
     private OrderState state;
     private ShippingInfo shippingInfo;
 
@@ -13,7 +18,7 @@ public class Order {
     private Money totalAmounts;
 
     public Order(List<OrderLine> orderLines, ShippingInfo shippingInfo) {
-        setShippingInfo(shippingInfo);
+        changeShippingInfo(shippingInfo);
         setOrderLines(orderLines);
     }
 
@@ -66,12 +71,12 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return Objects.equals(orderNumber, order.orderNumber);
+        return Objects.equals(id, order.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderNumber);
+        return Objects.hash(id);
     }
 }
 

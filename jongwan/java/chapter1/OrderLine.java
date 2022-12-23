@@ -1,16 +1,19 @@
 package chapter1;
 
+import lombok.Getter;
+
+@Getter
 public class OrderLine {
     private Product product;
     private Money price;
     private int quantity;
-    private int amounts;
+    private Money amounts;
 
-    public OrderLine(Product product, Money price, int quantity, int amounts) {
+    public OrderLine(Product product, Money price, int quantity, Money amounts) {
         this.product = product;
-        this.price = price;
+        this.price = new Money(price.getValue());
         this.quantity = quantity;
-        this.amounts = amounts;
+        this.amounts = calculateAmounts();
     }
 
     private Money calculateAmounts() {
@@ -18,6 +21,6 @@ public class OrderLine {
     }
 
     public int getAmounts() {
-        return 0;
+        return this.amounts.getValue();
     }
 }
