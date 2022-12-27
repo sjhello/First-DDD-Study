@@ -148,4 +148,93 @@ CustomerRepository와 RuleDicounter 등의 고수준의 인터페이스를 사�
 - 이러한 아키텍처에서 DIP를 적용한다면 아래와 같이 구현하여 다른 구현 클래스로도 변경해도 다른 레이어에 지장없는 아키텍처를 구성할 수 있다.
 ![img_2.png](image%2Fimg_2.png)
 
-## 
+## 도메인 영역의 구성 요소
+### 도메인의 주요 구성 요소
+- 엔티티: 고유의 식별자를 가진 객체, 데이터와 행동을 가지고 자신의 라이프 사이클을 가지고 있다.
+- 벨류: 식별자를 갖지 않는 객체로 하나의 값을 표현 할때 사용
+- 애그리거트: 연관된 엔티티와 밸류 객체를 하나로 묶은 것
+- 리포지토리: 도메인의 영속성을 철히하는 모듈, 예시로 DBMS 테이블에서 엔티티 객체를 가져오거나 저장
+- 도메인 서비스: 엔티티에 속하지 않는 기능을 제공하는 도메인 로직을 제공, 예시로 할인할 때 쿠폰, 회원 등급 등
+여러 도메인과 로직이 필요할 때 사용되는 경우.
+
+### 엔티티와 벨류 
+- DB와 엔티티는 다르다.
+- 도메인 엔티티는 데이터와 기능을 함께 제공한다.
+- 도메인 관점에서 기능을 구현하고 캡슐화해서 데이터가 임의로 변경되는 것을 막는다.
+- RDBMS와 같은 관계형 데이터 베이스는 벨류 타입을 표현하기 힘들다.
+
+```java
+public class Order {
+    private Long id;
+    private Orderer orderer;
+    private ShippingInfo shippingInfo;
+    
+    public void changeShippingInfo(ShippingInfo shippingInfo) {
+        this.shippingInfo = shippingInfo;
+    }
+}
+```
+### 느낀점
+- 이전에는 JPA를 학습하면서 엔티티는 테이블과 일대일로 매핑된 객체라고 생각했지만 지금은 좀 더 도메인 관점에서 바라보게 되었다.
+- 관계형 데이터베이스에서는 벨류 객체를 표현하는 것은 쉽지 않다. 테이블을 분리하여 엔티티로 분리하는 것이 좋다고 하는데
+해당 예시로는 이해하기가 어렵다. 좀 더 좋은 예시가 없을까?
+
+## 애그리거트
+- 도메인이 많아질수록 모델 관계도는 점점 복잡해진다.
+- 복잡한 도메인 구조에서는 전체적으로 보지못하고 개별적으로 초점을 맞추게 된다.
+- 배송지, 배송인, 배송업체, 배송상품 등 개별적으로 보게되면 이해하기 어렵게 복잡한 구조로 서로 엮여있다. 이것을 배송이라는 하나의 객체로 묶는다면
+개념적으로 좀 더 이해하기 쉬운 구조를 가져갈 수 있다.
+![img_3.png](image%2Fimg_3.png)
+- 개별 객체의 관계가 아니라 군집단위로 보게 되면서 개별 도메인 관계의 구조를 이해하기 쉬워진다.
+- 애그리거트는 루트 엔티티를 통헤 내부 개별 객체를 관리하는 기능을 제공한다.
+- 내부 엔티티나 벨류를 숨기고 루트 엔티티를 통하여 기능을 제공하기 때문에 외부의 접근으로서 안전하다.
+![img_4.png](image%2Fimg_4.png)
+```java
+public class Order {
+    
+    public void changeShippingInfo(ShippingInfo shippingInfo) {
+        checkShippingInfoChangeable(); // 배송지 변경 여부 체크
+        this.shippingInfo = shippingInfo;
+    }
+}
+```
+- 주문이라는 애그리거트는 무조건 도메인 규칙을 따라서 배송지를 변경 가능하다.
+- 루트 엔티티를 통하지 않고서는 개별 도메인을 접근하지 못하기 때문이다.
+- 애그리거트를 어떻게 구성했냐에 따라서 구현이 복잡해지거나 트랜잭션에 대한 제약이 생기기도 한다.
+
+### 느낀점
+- 잘못 구성한다면 하나의 객체에 너무 많은 책임을 가질 수 있게 될 것 같다.
+- 애그리거트안에 있는 개별 엔티티의 대한 기능이 계속 추가되면서 분리해야한다면 상당히 많은 부분을 수정해야되는 문제가 발생할 수 있을 것 같다.
+
+## 리포지터리
+- 리포지토리는 도메인의 구현을 위한 모델이다.
+- 리포지토리는 애그리거트 단위로 저장하고 관리한다.
+- JPA 리포지토리를 보면 추상화된 인터페이스에 실제 기능을 구현한다. 이것은 리포지토리가 고수준 모듈이고 구현체는 저수준 모듈이다
+
+```java
+public interface ProductRepository {
+  List<Product> findAllByKeyword(String keyword);
+}
+
+public interface JdbcProductRepository extends ProductRepository {
+  @Override
+  List<Product> findAllByKeyword(String keyword) {
+    ...
+  };
+}
+
+public interface ElasticProductRepository extends ProducstRepository {
+  @Override
+  List<Product> findAllByKeyword(String keyword) {
+    ...
+  }; 
+}
+```
+### 리포지터리와 서비스가 관련이 높은 이유
+- 응용 서비스는 도메인 객체를 실제로 가져오거나 저장할 때 리포지토리를 활용한다.
+- 트랜잭션을 리포지터리 구현 기술에 영향을 받는다.
+![img_5.png](image%2Fimg_5.png)
+
+### 느낀점
+- 애그리거트를 만들지 않았을 때 엔티티와 레파지토리가 너무 많은 메서드가 생기는 경우가 잦았다.
+- 좀 더 도메인 관점에서 바라보고 애그리거트를 잘 활용하였다면 리포지토리를 효율적으로 분리할 수 있을 것 같다. 
