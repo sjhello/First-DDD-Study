@@ -259,3 +259,78 @@ public class CancelOrderService{
     }
 }
 ````
+### 요청 처리 흐름
+````TEXT
+HTTP 요청
+   ↓
+표현계층(Controller, 전송한 데이터 유효성 or 변환) 
+   ↓
+응용계층(도메인 모델을 이용하여 기능 구현)
+   ↓
+인프라(저장, 삭제, 조회 등을 처리)
+````
+### 인프라스트럭처 개요
+````JAVA
+- 표현, 응용, 도메인 영역을 지원한다.
+- 도메인 객체의 영속성 처리, 트랙잭션 등등 보조 기능을 지원한다.
+- 도메인/응용 영역에서 인프라 스트럭처를 인터페이스를 접근하면 더욱 유연한 어플리케이션이 된다.
+- DIP가 주는 장점을 해치지 않는 범위에서 인프라스트럭처에 대한 의존은 나쁘지 않다.
+@Entity
+@Table(name = "ORDER")
+public class Order{ //주문이라는 도메인, JPA 접근 기술에 의존한다.
+    ...
+}
+````
+### 모듈 구성
+- 소프트웨어 아키텍처의 각 계층 영역별로 패키지가 구성되어 있다.
+````JAVA
+- 각 영역별로 패키지를 나눔
+package com.myshop
+        
+            UI
+            ↓
+        APPLICATION
+            ↓
+          DOMAIN
+            ↓
+          INFRA
+````
+- 도메인이 크면 하위 도메인 별로 모듈을 나눈다.
+````JAVA
+- 도메인이 크면 하위 도메인으로 나눈다.
+package com.myshop
+package com.myshop.order   package com.myshop.member
+        
+            UI                       UI  
+            ↓                        ↓
+        APPLICATION              APPLICATION
+            ↓                        ↓
+          DOMAIN                   DOMAIN
+            ↓                        ↓
+          INFRA                    INFRA
+````
+- 도메인 모듈은 `애그리거트`를 기준으로 다시 패키지를 구성한다.
+````JAVA
+package com.myshop.order
+- 애그리거트, 모델, 리포지터리는 같은 패키지에 위치힌다.
+ > com.myshop.order.domain
+                      |- OrderLines.java
+                      |- Orderer.java
+                      |- OrderRepository.java
+                      |- OrderService.java
+
+- 도메인이 복잡하면 도메인 모델,서비스를 다시 나눌수도 있다.
+ > com.myshop.order.domain
+                     |- order
+                          |- Orderer.java
+                          |- Order.java ...
+                     |- cancel
+                          |- Cancel.java ...
+                     |- service
+                          |- OrderService.java 
+                          |- CancelService.java ... 
+                     |- infra
+                          |- OrderRepository.java
+                          |- CancelRepository.java
+````
+- 한 패키지에 가능하면 10~15개 미만으로 타입 개수를 유지한다.
