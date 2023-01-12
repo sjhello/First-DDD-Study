@@ -213,3 +213,59 @@ public class service(){
 ````
 - 조회 전용 쿼리를 사용하여 이를 해결 할 수 있다.
   - 주문상품을 한번에 조회할 수 있도록 처리
+
+### 애그리거트 간 집합 연관
+````JAVA
+- 한카테고리에 여러개의 상품이 속할 수 있으니 1:N 관계라고 말할수 있다.
+- 목록이나 상세 화면 같은 조회 기능은 전용 모델을 이용하여 구현하는 것이 좋다.
+
+public class Category{
+    private Set<Product> products;
+    private List<Product> getProducts(int page, int size);
+  ...
+}
+````
+### 애그리거트를 팩토리로 사용하기
+````JAVA
+# AS-IS
+- 도메인 로직 처리가 응용 서비스에 노출 되어 있다. 즉, 도메인으로 해당로직을 옮겨야 한다.
+- 상점이 상품을 생성하며, 상점이 상품을 만드는 주체이므로 논리적으로 하나의 도메인이라고 판단할 수 있으므로
+상점 애그리거트가 상품을 생성하도록 하는 것이 좋다.
+
+public class RegisterProductService {
+  public Product registerNewProdut(String req) throws Exception{
+    Store store = new Store(1, false);
+    if(store.isBlcoekd()){//도메인 로직이 들어간다. 별도로 빼는 것이 바람직하다.
+      throw new Exception();
+    }
+    Product product = new Product("테스트상품", "123");
+    return product;
+  }
+}
+
+# TO-BE
+- 상점 애그리거트가 상품을 생성하도록 도메인 역할을 부여하도록 한다.
+- Store 도메인의 응집도가 높아졌다.
+public class RegisterProductService {
+  public Product registerNewProdut(String req) throws Exception{
+    Store store = new Store(1, false);
+    return store.createProduct("테스트상품","123");
+  }
+}
+
+public class Store {
+  private int storeId;
+  private boolean block;
+  ...
+  public Product createProduct(String name, String code) throws Exception {
+    if(isBlcoekd()) throw new Exception();
+    return ProductFactory.create(name,code);
+  }
+}
+
+public class ProductFactory {
+  public static Product create(String name, String code){
+    return new Product(name,code);
+  }
+}
+````
