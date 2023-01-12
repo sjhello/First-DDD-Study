@@ -1,7 +1,5 @@
 # 응용 서비스와 표현 영역
-q1 : 요청 재생성
-q2 : service 에서 service 를 상송
-q3 : 응용 서비스의 크기 기능별로 쪼갠다면, service 계층을 의존하는것이 더 많아 지지 않을까?
+
 ### 표현 영역과 응용 영역
 - 표현 영역
   - 사용자의 요청을 해석하며, 응용 계층에게 기능을 위임한다.
@@ -107,3 +105,25 @@ public class ChangePasswordServiceImpl implements ChangePasswordService{
 }
 ````
 #### 메서드 파라미터와 값 리턴
+- 응용 서비스에 요청할 요청 파라미터가 두 개 이상 존재하면 데이터 전달을 위한 별도 클래스를 사용하는 것이 편리하다.
+- 응용 서비스는 표현 영역에서 필요한 데이터만 리턴하는것이 응집도를 높이는 방법이다.
+  - 애그리거트 자체를 리턴하면 `표현계층(controller)에서도 애그리거트가 제공하는 메서드를 호출`할 수 있다.
+#### 표현 영역에 의존하지 않기
+````JAVA
+- 응용 계층이 표현 계층을 의존하게 된다.(HttpServletRequest)
+- 유지 보수하기 힘들어진다.(request 데이터가 어떤 데이터를 포함하는지 구분하기 어렵다.)
+public class MemberController{
+    @PostMapping
+    public String submit(HttpServletRequest request){
+        changePasswordService(request);
+        return 'ok';
+    }
+}
+````
+#### 트랜잭션 처리
+- 프레임워크가 제공하는 트랜잭션 기능을 적극 사용하자.(관리가 편함)
+
+### 표현 영역
+- 사용자가 보는 화면을 제공 및 제어한다.
+- 사용자의 요청을 응용계층에 전달하고 결과를 사용자에게 전달한다.
+- 사용자의 세션을 관리한다.(웹에서 쿠키, 서버 세션, 권한 등)
