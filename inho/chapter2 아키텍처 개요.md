@@ -2,9 +2,11 @@
 
 # 2.1 네 개의 영역
 
-![IMG_9056.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9056.heic)
+![IMG_9056.heic](./images/IMG_9056.jpeg)
+[출처: 도메인 주도개발 시작하기 / 최범균]
 
-![IMG_9024.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9024.heic)
+![IMG_9024.HEIC](./images/IMG_9024.jpeg)
+[출처: 도메인 주도개발 시작하기 / 최범균]
 
 | 영역 | 역할과 책임 |  |
 | --- | --- | --- |
@@ -20,7 +22,8 @@
   | Infrastructure | - 실제 구현기술을 통해 데이터를 관리한다.
 - 외부 시스템, DB, 메시징… | - DAO, Repository |
 
-![IMG_9057.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9057.heic)
+![IMG_9057.heic](./images/IMG_9057.jpeg)
+[출처: 도메인 주도개발 시작하기 / 최범균]
 
 ```kotlin
 class CancelOrderService {
@@ -41,7 +44,8 @@ class CancelOrderService {
 }
 ```
 
-![IMG_9058.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9058.heic)
+![IMG_9058.HEIC](./images/IMG_9058.jpeg)
+[출처: 도메인 주도개발 시작하기 / 최범균]
 
 - **Presentation / Application / Domain** Layer 에서는 구현 기술을 사용한 코드를 직접 만들지 않는다.
     - 구현 기술과 관련된 객체에 대한 의존성이 없다.
@@ -53,28 +57,29 @@ class CancelOrderService {
 - 구현의 편리함을 위해 구조를 유연하게 적용하기도 하지만 고민이 필요하다.
     - 상위 계층이 하위 계층에 의존한다는 것은 상위계층이 하위계층에 종속된다.
 
-  ![IMG_9064.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9064.heic)
+  ![IMG_9064.HEIC](./images/IMG_9064.jpeg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
   **Infrastructure**
 
     ```kotlin
     class DroolsRuleEngine {
-    	private val kContainer: KieContainer
+        private val kContainer: KieContainer
     	
-    	constructor() {
-    		val ks = KieServices.Factory.get()
-    		kContainer = ks.getKieClasspathContainer()
-    	}
+        constructor() {
+            val ks = KieServices.Factory.get()
+            kContainer = ks.getKieClasspathContainer()
+        }
     
-    	fun evaluate(sessionName: String, facts: List<?>) {
-    		val kSession = kContainer.newKieSession(sessionName)
-    		try {
-    			facts.forEach { kSession.insert(it) }
-    			kSession.fireAllRules()
-    		} finally {
-    			kSession.dispose()
-    		}
-    	}
+        fun evaluate(sessionName: String, facts: List<?>) {
+            val kSession = kContainer.newKieSession(sessionName)
+            try {
+                facts.forEach { kSession.insert(it) }
+                kSession.fireAllRules()
+            } finally {
+                kSession.dispose()
+            }
+        }
     }
     ```
 
@@ -82,22 +87,22 @@ class CancelOrderService {
 
     ```kotlin
     class CalculateDiscountService {
-    	private val ruleEngine: DroolsRuleEngine
+        private val ruleEngine: DroolsRuleEngine
     	
-    	constructor() {
-    		ruleEngine = DroolsRuleEngine()
-    	}
+        constructor() {
+            ruleEngine = DroolsRuleEngine()
+        }
     
-    	fun calculateDiscount(orderLines: List<OrderLine>, customerId: String): Money {
-    		val customer = findCustomer(customerId)
+        fun calculateDiscount(orderLines: List<OrderLine>, customerId: String): Money {
+            val customer = findCustomer(customerId)
     		
-    		val money = MutableMoney(0)
-    		val facts = listOf(customer, money).apply {
-    			addAll(orderLines)
-    		}
-    		ruleEngine.evalute("discountCalculation", facts)
-    		return money.toImmutableMoney()
-    	}
+            val money = MutableMoney(0)
+            val facts = listOf(customer, money).apply {
+                addAll(orderLines)
+            }
+            ruleEngine.evalute("discountCalculation", facts)
+            return money.toImmutableMoney()
+        }
     }
     ```
 
@@ -108,14 +113,15 @@ class CancelOrderService {
         - `Drools` 방식이 아닌 다른 방식을 사용하도록 변경하려면 `CalculateDiscountService`(**Application)** 에 큰 변경이 일어난다.
         - `CalculateDiscountService`(**Application**) 이 변경되면 **Presentation** Layer 까지 영향을 받는다.
 
-      ![IMG_9065.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9065.heic)
+      ![IMG_9065.heic](./images/IMG_9065.jpeg)
 
 
 # 2.3 DIP
 
 - 가격할인을 계산하려면 고객정보(`Customer`)와 할인정책(`DiscountRule`)이 필요하다.
 
-  ![IMG_9121.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9121.heic)
+  ![IMG_9121.heic](./images/IMG_9121.jpeg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
   | 고수준 모듈 | 의미있는 단일 기능을 제공한다. | - 할인 금액을 구한다.
     - CalculatDiscountService |
@@ -129,44 +135,45 @@ class CancelOrderService {
 - **저수준 모듈이 고수준 모듈에 의존하도록 해야 한다. → DIP(D**ependency **I**njection **P**rinciple)
     - `CalculateDiscountService` 가 원하는 것은 할인금액이다.
 
-      ![IMG_9123.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9123.heic)
-
+      ![IMG_9123.HEIC](./images/IMG_9123.jpeg)
+      [출처: 도메인 주도개발 시작하기 / 최범균]
+  
         ```kotlin
         interface RuleDiscounter {
-        	fun applyRules(customer: Customer, orderLines: List<OrderLine>): Money?
+            fun applyRules(customer: Customer, orderLines: List<OrderLine>): Money?
         }
         ```
 
         ```kotlin
         class CalculateDiscountService(
-        	private val ruleDiscounter: RuleDiscounter
+            private val ruleDiscounter: RuleDiscounter
         ) {
-        	// Rule 이 세부적으로 어떻게 구현되는지 정보 또는 지식이 없다 -> 세부구현에 의존하지 않음
-        	fun calculateDiscount(
-        		orderLines: List<OrderLine>, 
-        		customerId: String
-        	): Money 
-        	= ruleDiscounter.applyRules(findCustomer(customerId), orderLines)
+            // Rule 이 세부적으로 어떻게 구현되는지 정보 또는 지식이 없다 -> 세부구현에 의존하지 않음
+            fun calculateDiscount(
+                orderLines: List<OrderLine>, 
+                customerId: String
+            ): Money 
+            = ruleDiscounter.applyRules(findCustomer(customerId), orderLines)
         }
         ```
 
         ```kotlin
         class DroolsRuleDiscounter(
-        	private val kContainer: KieContainer
+            private val kContainer: KieContainer
         ) : RuleDiscounter {
         	
-        	init {
-        		kContainer = KieServices.Factory.get().kieClasspathContainer
-        	}
+            init {
+                kContainer = KieServices.Factory.get().kieClasspathContainer
+            }
         
-        	override fun applyRules(
-        		customer: Customer, 
-        		orderLines: List<OrderLine>
-        	): Money? {
-        		val kSession = kContainer.newKieSession("discountSession")
-        		kSession.use { it.fireAllRules() }
-        		return money.toImmutableMoney()
-        	}
+            override fun applyRules(
+                customer: Customer, 
+                orderLines: List<OrderLine>
+            ): Money? {
+                val kSession = kContainer.newKieSession("discountSession")
+                kSession.use { it.fireAllRules() }
+                return money.toImmutableMoney()
+            }
         }
         ```
 
@@ -184,25 +191,25 @@ class CancelOrderService {
         ```kotlin
         @ExtendWith(MockKExtension::class)
         class CalculateDiscountServiceTest {	
-        	@Test
-        	fun noCustomer_thenExceptionShouldBeThrown() {
-        		// 테스트를 위한 대역객체
-        		val stubRepo = mockk<CustomerRepository>() {
-        			every { findById("noCustId") } returns null
-        		}
-        		val stubRule = object: RuleDiscounter {
+            @Test
+            fun noCustomer_thenExceptionShouldBeThrown() {
+                // 테스트를 위한 대역객체
+                val stubRepo = mockk<CustomerRepository>() {
+                    every { findById("noCustId") } returns null
+                }
+                val stubRule = object: RuleDiscounter {
                 override fun applyRules(
-        					customer: Customer, 
-        					orderLines: List<OrderLine>
-        				): Money? = null
+                            customer: Customer, 
+                            orderLines: List<OrderLine>
+                        ): Money? = null
             }
         
-        		// 대역객체 주입을 통한 테스트
-        		val calDisSvc = CalculateDiscountService(stubRepo, stubRule)
-        		assertThatThrownBy {
-        			calDisSvc.calculateDiscount(someLines, "noCustId")
-        		}
-        	}
+                // 대역객체 주입을 통한 테스트
+                val calDisSvc = CalculateDiscountService(stubRepo, stubRule)
+                assertThatThrownBy {
+                    calDisSvc.calculateDiscount(someLines, "noCustId")
+                }
+            }
         }
         ```
 
@@ -212,39 +219,41 @@ class CancelOrderService {
 - DIP 는 **단순히 Strategy Pattern 이 아니다. →** 저수준 모듈이 고수준 모듈을 의존하도록 의존방향 역전
 - **도메인 관점에서 고/저 수준을 판단**하고, 고수준 모듈을 도출한다.
 
-  ![IMG_9124.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9124.heic)
-
+  ![IMG_9124.HEIC](./images/IMG_9124.jpeg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
 ### 2.3.2 DIP 와 아키텍처
 
 - **도메인 관점에서** 인프라스트럭처 영역은 저수준 모듈이고, 응용영역과 도메인 영역은 고수준 모듈이다.
 
-  ![IMG_9125.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9125.heic)
-
+  ![IMG_9125.HEIC](./images/IMG_9125.jpeg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
     - 추상화 대상이 모호하다면, 무조건 DIP 를 적용하지 않고, 적용범위를 검토 후 적용하자
 
 ## 2.4 도메인 영역의 주요 구성요소
 
-![IMG_9126.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9126.heic)
+![IMG_9126.heic](./images/IMG_9126.jpeg)
+[출처: 도메인 주도개발 시작하기 / 최범균]
 
 ### 2.4.1 엔티티와 밸류
 
 - 도메인 모델의 **ENTITY** 와 DB 테이블의 **ENTITY** 는 다르다.
     - DB 테이블의 ENTITY 는 데이터만 제공한다.
 
-      ![IMG_9127.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9127.heic)
+      ![IMG_9127.HEIC](./images/IMG_9127.jpeg)
+      [출처: 도메인 주도개발 시작하기 / 최범균]
 
     - 도메인 모델의 엔티티는 데이터와 기능을 제공한다.
 
         ```kotlin
         class Order(
-        	private val number: OrderNo,
-        	private val orderer: Orderer,
-        	private val shipping: Shipping
+            private val number: OrderNo,
+            private val orderer: Orderer,
+            private val shipping: Shipping
         ) {
-        	fun changeShipping(newShipping: Shipping) {
-        		// 도메인 규칙 및 기능구현
-        	}
+            fun changeShipping(newShipping: Shipping) {
+                // 도메인 규칙 및 기능구현
+            }
         }
         ```
 
@@ -252,8 +261,8 @@ class CancelOrderService {
 
             ```kotlin
             data class Orderer(
-            	private val name: String, 
-            	private val email: String
+                private val name: String, 
+                private val email: String
             )
             ```
 
@@ -265,18 +274,20 @@ class CancelOrderService {
 - **AGGREGATE** 는
     - 연관된 **ENTITY** 와 **VALUE** 를 개념적으로 하나로 묶은 것이다.
 
-      ![IMG_9129.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9129.heic)
-
+      ![IMG_9129.heic](./images/IMG_9129.jpeg)
+      [출처: 도메인 주도개발 시작하기 / 최범균]
+  
     - 반드시 ROOT **ENTITY** 를 갖는다.
         - ROOT **ENTITY** 는
             - **ENTITY**, **VALUE** 를 이용하여 외부에 기능을 제공한다.
             - 내부 구현을 숨기고, 외부의 변경으로부터 내부 **ENTITY**, **VALUE** 를 보호한다.
 
-              ![IMG_9130.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9130.heic)
+              ![IMG_9130.HEIC](./images/IMG_9130.jpeg)
 
 - **ENTITY** 와 **VALUE** 가 많아질수록 도메인 모델은 점점 더 복잡해진다.
 
-  ![IMG_9128 2.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9128_2.heic)
+  ![IMG_9128 2.heic](./images/IMG_9128.jpg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
     - 도메인 모델이 복잡해지면
         - 전체 설계를 보기 어렵다. → 전체를 보지 못하고 개별적인 세부 도메인에 집중하게 된다.
@@ -294,22 +305,23 @@ class CancelOrderService {
 
     ```kotlin
     interface OrderRepository {
-    	fun findBy(number: OrderNumber): Order
-    	fun save(order: Order)
-    	fun delete(order: Order)
+        fun findBy(number: OrderNumber): Order
+        fun save(order: Order)
+        fun delete(order: Order)
     }
     ```
 
 - 도메인 모델 관점에서 **REPOSITORY** 는 도메인 객체를 영속화 하는데 필요한 기능을 추상하였으므로 고수준 모듈이다.
 
   ![IMG_9131.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9131.heic)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
     - **APPLICATION** 은 도메인 객체를 조회 / 저장 할 때 **REPOSITORY** 를 사용한다.
 
         ```kotlin
         interface SomeRepository {
-        	fun save(some: Some)
-        	fun findBy(id: SomeId)
+            fun save(some: Some)
+            fun findBy(id: SomeId)
         }
         ```
 
@@ -328,7 +340,8 @@ class CancelOrderService {
 - Domain Model 의 영속성 관리
   ㄴ SMTP / Rest API / Transaction / Framework 구현기술에 대한 영역 |
 
-![IMG_9169.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9169.heic)
+![IMG_9169.heic](./images/IMG_9169.jpeg)
+[출처: 도메인 주도개발 시작하기 / 최범균]
 
 ```kotlin
 class CancelOrderService(private val orderRepository: OrderRepository) {
@@ -349,15 +362,18 @@ class CancelOrderService(private val orderRepository: OrderRepository) {
 
 - 도메인이 작은 경우 영역별로 분리한다.
 
-  ![IMG_9187.heic](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9187.heic)
+  ![IMG_9187.heic](./images/IMG_9187.jpeg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
 - 도메인이 크다면 하위 도메인 별로 분리한다.
 
-  ![IMG_9188.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9188.heic)
+  ![IMG_9188.HEIC](./images/IMG_9188.jpeg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
 - 하위 도메인이 크다면 애그리거트를 기준으로 분리한다.
 
-  ![IMG_9189.HEIC](Chapter%202%20%E1%84%8B%E1%85%A1%E1%84%8F%E1%85%B5%E1%84%90%E1%85%A6%E1%86%A8%E1%84%8E%E1%85%A5%20%E1%84%80%E1%85%A2%E1%84%8B%E1%85%AD%207b51b8c2b5b34b02982ddd800eeead43/IMG_9189.heic)
+  ![IMG_9189.HEIC](./images/IMG_9189.jpeg)
+  [출처: 도메인 주도개발 시작하기 / 최범균]
 
 - 단, 애그리거트, 모델, 리포지터리는 같은 패키지에 존재한다.
 - 한 패키지에 코드를 찾기 불편할 정도로 많은 타입이 몰려있지 않도록 관리해야 한다.
