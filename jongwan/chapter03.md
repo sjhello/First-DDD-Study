@@ -215,16 +215,11 @@ public class service(){
   - 주문상품을 한번에 조회할 수 있도록 처리
 
 ### 애그리거트 간 집합 연관
-````JAVA
-- 한카테고리에 여러개의 상품이 속할 수 있으니 1:N 관계라고 말할수 있다.
+- 개념적으로 존재하는 애그리거트 간의 1:N 연관이, 요구사항과는 상관 없을 때가 있다.
 - 목록이나 상세 화면 같은 조회 기능은 전용 모델을 이용하여 구현하는 것이 좋다.
+- 개념적으로는 카테고리에 여러 상품이 카테고리에 포함되는 것이 맞으나, 적재적소에 맞게 사용을 해야한다.
+ ex) 특정 카테고리 상품만 필요할 수 있음.
 
-public class Category{
-    private Set<Product> products;
-    private List<Product> getProducts(int page, int size);
-  ...
-}
-````
 ### 애그리거트를 팩토리로 사용하기
 ````JAVA
 # AS-IS

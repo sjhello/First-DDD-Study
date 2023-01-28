@@ -4,6 +4,9 @@ import lombok.Getter;
 
 @Getter
 public class JoinRequest {
+
+    private String id;
+    private String name;
     private String email;
     private String password;
 
