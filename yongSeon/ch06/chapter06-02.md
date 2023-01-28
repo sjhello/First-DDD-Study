@@ -101,3 +101,71 @@ public class MemberController {
 - 응용서비스 계층은 비지니스로직이 들어가는 곳이기 때문에 단순하고 그 의미가 잘 담겨야된다고 생각한다.
 
 ## 6.6 권한 검사
+- 스플링 환경에서는 스프링 시큐리티라는 모듈을 사용하여 유연하게 권한 검사할 수 있다.
+- 권한 검사는 프레임워크 복잡도에 떠나 아래와 같은 영역에서 권한 검사흘 할 수 있다.
+  - 표현영역
+  - 응용 서비스
+  - 도메인 영역
+
+### 표현 계층에서 권한 검사
+![img_1.png](images%2Fimg_1.png)
+- 아래처럼 처리할 경우 서블릿 필터를 통해 권한 검사를 할 수 있다.
+  - URL을 통해 컨트롤러에 접근하기 전에 인증여부를 검사해서 인증된 요청만 처리한다.
+  - 인증된 사용자가 아닐 경우 401 에러를 반환한다.
+- 이 방법은 스프링 시큐리티도 유사한 방식으로 처리한다. 
+
+### 응용 계층에서 권한 검사
+- URL만으로도 접근 제어를 할 수 없을 경우 응용서비스를 통해 권한 검사를 할 수 있다.
+- 접근 제어코드를 꼭 서비스 계층에 넣지 않아도 된다. AOP를 통해 서비스 접근에 대한 권한 검사를 할 수 있다.
+
+```java
+public class BookMemberService {
+    
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public void block(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+            .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+        member.block();
+    }
+}
+```
+
+### 도메인 계층에서 권한 검사
+```java
+public class DeleteArticleService {
+    public void delete(String userId, Long articleId) {
+        Article article = articleRepository.findById(articleId);
+        permissionService.checkPermission(userId, article);
+        article.markDeleted();
+    }
+}
+```
+- 도메인 계층에서의 권한 검사는 구현이 복잡하다, 왜나하면 인프라스트럭처에서 가져온 결과를 통해 처리해야 되기 때문이다. 
+- 스프링 시큐리티와 같은 보안 프레임워크를 확장해서 개발 도메인 객체 수준의 권한 검사를 할 수도 있지만 프레임워크에 대한 높은 이해도가 필요하다.
+
+## 6.7 조회 전용 기능과 응용 서비스
+- 서비스에서 단순한 조회같은 경우 아래와 같이 호출하는 형태로 구현할 수 있다.
+```java
+public class OrderListService {
+    public List<Order> getOrders(String userId) {
+        return orderRepository.findByUserId(userId);
+    }
+}
+```
+- 서비스에서 수행하는 추가적인 로직이 없을 뿐더러 단일 쿼리만 실행하는 조회 전용 기능이여서 트랜잭션이 필요하지 않는다.
+- 이런 경우에는 서비스를 사용하지 않고 조회 기능을 직접 호출하는 것이 좋다.
+```java
+public class OrderController {
+    private OrderRepository orderRepository;
+    
+    @GetMapping("/orders")
+    public List<Order> getOrders(String userId) {
+        return orderRepository.findByUserId(userId);
+    }
+}
+```
+- DDD 관점으로 설계하면서 서비스를 사용하고 있다가 바로 가져가서 쓰는 것이 어색할 수 있지만 서비스 계층이 사용자 요청을 처리하는데 별다른 기여를 하지 못한다면 만들지 않아도 된다.
+
+### 느낀점
+- 여러 계층에서의 값 검증이나 권한 검사를 하는 것은 도메인의 목적이나 개발자의 재량에 따라 달라질 수 있다는 것을 알 수 있었다.
+- 소프트웨어의 설계는 항상 트레이드오프가 존재하고 그에 따라서 설계의 방향이 달라질 수 있다는 것을 알 수 있었다.
