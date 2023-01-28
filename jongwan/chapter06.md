@@ -127,3 +127,154 @@ public class MemberController{
 - 사용자가 보는 화면을 제공 및 제어한다.
 - 사용자의 요청을 응용계층에 전달하고 결과를 사용자에게 전달한다.
 - 사용자의 세션을 관리한다.(웹에서 쿠키, 서버 세션, 권한 등)
+
+### 값 검증
+- `표현 영역`과 `응용 서비스` 두 곳에서 모두 수행한다.
+- `표현 영역` : 필수 값, 값의 형식, 범위 등을 검증
+- `응용 서비스` : 데이터 존재 유무와 같은 논리적 오류 검증
+````JAVA
+# 응용 서비스내 검증 version1
+- 이와같이 응용 서비스에서 각 값이 유효한지 확인할 목적으로 익셉션 사용시, 사용자에게 불편함 제공
+ > 첫 번째 값이 올바르지 않아 익셉션 발생시키면, 나머지 항목이 올바른지는 알 수 없음.
+- 컨트롤러 소스가 난잡해진다.
+
+public class JoinService{
+  public void join(JoinRequest joinRequest){
+    checkEmpty(joinRequest.getId(), "id");
+    checkEmpty(joinRequest.getName(), "name");
+    checkEmpty(joinRequest.getPassword(), "password");
+    checkDuplicateId(joinRequest.getId());
+  }
+
+  private void checkDuplicateId(String id) {
+    int duplicateIdCount = 1;//동일한 아이디가 존재
+    if(duplicateIdCount > 0){
+      throw new DuplicateIdException("동일한 아이디가 존재합니다.");
+    }
+  }
+
+  private void checkEmpty(String value, String propertyName){
+    if(value == null || value.isEmpty()){
+      throw new EmptyPropertyException(propertyName);
+    }
+  }    
+}
+
+
+- 서비스 계층에서 전달하는 exception을 전부 catch 해야함.
+public class JoinController{
+
+  public Map<String,String> join(JoinRequest joinRequest){
+    Map<String,String> result = new HashMap<>();
+    try {
+      joinService.join(joinRequest);
+    }catch (EmptyPropertyException emptyEx){    //값이 null or empty
+      result.put("error",emptyEx.getMessage());
+    }catch (DuplicateIdException duplEx){       //중복된 id 존재
+      result.put("error",duplEx.getMessage());
+    }catch (Exception e){                       //그외 에러
+      result.put("error",e.getMessage());
+    }
+    return result;
+  }
+}
+````
+````JAVA
+# 응용 서비스내 검증 version2
+- form으로 넘어오는 데이터 전체를 체크하여, 오입력된 필드정보를 전달한다.
+- 표현게층에서는 exception을 하나만 받아 처리할 수 있게된다.
+
+public class JoinService{
+  public void joinUsingValidator(JoinRequest joinRequest){
+    List<ValidationError> errors = new ArrayList<>();
+    if(joinRequest.getId() == null)
+      errors.add(ValidationError.of("아이디 없음","empty"));
+    if(joinRequest.getPassword() == null)
+      errors.add(ValidationError.of("비밀번호 없음","empty"));
+    if(joinRequest.getName() == null)
+      errors.add(ValidationError.of("이메일 없음","empty"));
+    if(isDuplicateIdExist(joinRequest.getId()))
+      errors.add(ValidationError.of("동일한id 존재", "duplidexist"));
+
+    if(!errors.isEmpty())
+      throw new ValidationErrorException(errors);
+  }
+}
+
+- service 계층에서 하나의 익셉션만 전달하므로 표현계층 난잡한 소스를 줄일 수 있다.
+public class JoinController {
+  public Map<String, Object> joinUsingValidator(JoinRequest joinRequest) {
+    Map<String, Object> result = new HashMap<>();
+    try {
+      joinService.join(joinRequest);
+    } catch (ValidationErrorException ve) { //service 게층에서 하나의 익셉션만 던짐
+      result.put("error", ve.getErrors());
+    } catch (Exception e) {
+      result.put("error", e.getMessage());
+    }
+    return result;
+  }
+}
+````
+
+````JAVA
+# 표현영역에서 검증1
+
+public class JoinController {
+  private JoinService joinService;
+
+  public String joinUsingPresentationValidator(JoinRequest joinRequest) {
+    List<String> erros = new ArrayList<>();
+    if (joinRequest == null) erros.add("request값 없음");
+    if (joinRequest.getId() == null) erros.add("아이디 없음");
+    if (!erros.isEmpty()) return erros.toString();
+    ....
+    try {
+      joinService.join(joinRequest);
+    } catch (Exception e) {
+      ...
+    }
+    return "view";
+  }
+}
+
+# 표현영역에서 검증2
+-spring 프레임워크에서 제공하는 Validator 인터페이스를 구현.
+public class JoinController {
+  private final JoinRequestValidator joinRequestValidator;
+  private final JoinService joinService;
+    
+  public String join(JoinRequest joinRequest, Errors errors){
+    joinRequestValidator.vaidate(joinRequest,errors);
+    try{
+      joinService.join(joinRequest);
+    }catch (Exception e){
+    }
+    return "view";
+  }
+}
+````
+### 권한 검사
+- `권한 검사`는 표현영역,응용서비스, 도메인에서 수행될 수 있다.
+- `표현영역`
+  - 이러한 접근을 제어하기 좋은 위치는 `서블릿 필터`이다.
+- `응용 서비스`
+  - 스프링 시큐리티에서 제공하는 권한검사 기능도 사용할 수 있다.
+    - @PreAuthrize
+- `도메인`
+  - 보안 프레임워크를 확장해서 개별 도메인 객체 수준의 권한 검사 기능도 넣을 수 있다.
+    - 높은 프레임워크 이해도가 필요하다.
+
+### 조회 전용 기능과 응용 서비스
+- 서비스에서 수행하는 내용이 단순 조회 일때 `응용계층`이 아니라 `표현 영역`에서 바로 접근해도 괜찮다.
+````JAVA
+public class Controller{
+    private orderViewDao orderViewDao;
+    
+    public String list(Model model){
+        int orderId = 2022123;
+        model.addAttribute("orders", orderViewDao.selectByOrderer(orderId));
+        return "order/list";
+    }
+}
+````
